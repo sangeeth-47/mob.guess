@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="description" content="Age Guess AI is a web app that predicts your age from a photo using artificial intelligence. Upload your image, see your estimated age instantly, and share with friends. Fast, accurate, and free to try." />
+  <meta name="keywords" content="age guess, age predictor, AI age detector, photo age guess, age estimation, guess my age, AI photo app, image age recognition, AI projects" />
+
+  <title>Age Guessing AI</title>
+  <!-- Comprehensive favicon support -->
+  <!-- Standard favicon -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  
+  <!-- PNG favicons for modern browsers -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  
+  <!-- Apple Touch Icon for iOS -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  
+  <!-- Android Chrome icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/android-chrome-512x512.png">
+  
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="assets/site.webmanifest">
+  
+  <!-- Additional meta tags for better mobile support -->
+  <meta name="theme-color" content="#00ffcc">
+  <meta name="msapplication-TileColor" content="#00ffcc">
+  <style>
+    * {
+  box-sizing: border-box;
+}
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+   #loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(ellipse at top, #1e123d 0%, #0a0519 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+    .spinner {
+      border: 6px solid #333;
+      border-top: 6px solid #00ffcc;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+  margin-top: -10px; /* Move text slightly up */
+  margin-left: 8px;  /* Slight right shift */
+  font-size: 1rem;
+  color: #ccc;
+}
+
+    #mainContent {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <div id="loader">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading Age Guessing AI...</div>
+</div>
+
+  <div id="mainContent">
+    <div class="container">
+      <div class="title">Guess Your Age</div>
+      <div class="description">Upload your image and see what age and gender the AI thinks you are.</div>
+
+      <div class="qa-toggle" onclick="toggleQA()">❓</div>
+      <div class="qa-box" id="qaBox">
+        <div class="qa-item"><strong>Q1:</strong> Why isn't the Age Guessing feature functioning? <br><strong>A:</strong> The model is still being trained.</div>
+        <div class="qa-item"><strong>Q2:</strong> Why isn't the Age Guess Spinning forever?<br><strong>A:</strong> Free-tier services may sleep—refresh to re-activate.</div>
+        <div class="qa-item"><strong>Q3:</strong> How does the AI guess age?<br><strong>A:</strong> Through a trained deep learning model analyzing facial features.</div>
+        <div class="qa-item"><strong>Q4:</strong> Is my image stored?<br><strong>A:</strong> Yes, the image is stored for processing. It’s needed by the API to generate prediction.</div>
+      </div>
+
+      <div class="upload-area">
+        <label class="custom-upload" id="dropZone" for="imageInput">Choose Image or Drop Here</label>
+        <input type="file" accept="image/*" id="imageInput" />
+        <div class="image-preview-container" id="previewContainer">
+          <img id="preview" alt="Image Preview" />
+          <button class="remove-btn" onclick="removeImage()">×</button>
+        </div>
+        <button class="modern-btn" id="guessBtn">
+  Guess My Age <div class="btn-spinner" id="spinner"></span>
+</button>
+      </div>
+      <div id="faceToast" class="toast hidden">
+      ❌ <strong> No face detected!<br></strong> Please upload a clear image showing a human face.
+      </div>
+      <p id="status"></p>
+      <a href="https://sangeeth47.in" target="_blank" class="footer glow-on-hover">Powered by SANGEETH M K</a>
+      <a id="visitCount" href="https://guess.sangeeth47.in/visitor" target="_blank" title="Administrative access only">
+  Loading visits...
+</a>
+      <div class="notice" id="devNotice"></div>
+    </div>
+  </div>
+
+  <script>
+  (async () => {
+    try {
+      const res = await fetch("https://sangeeth2314105883websitecounter.azurewebsites.net/api/getAssets");
+      const { cssUrl, jsUrl } = await res.json();
+
+      const cssLink = document.createElement("link");
+      cssLink.rel = "stylesheet";
+      cssLink.href = cssUrl;
+
+      const cssLoaded = new Promise(resolve => {
+        cssLink.onload = resolve;
+        cssLink.onerror = () => {
+          console.error("❌ Failed to load CSS");
+          resolve(); // Fallback to continue even if CSS fails
+        };
+      });
+
+      document.head.appendChild(cssLink);
+
+      const jsScript = document.createElement("script");
+      jsScript.src = jsUrl;
+
+      const jsLoaded = new Promise(resolve => {
+        jsScript.onload = resolve;
+        jsScript.onerror = () => {
+          console.error("❌ Failed to load JS");
+          resolve(); // Continue even if JS fails
+        };
+      });
+
+      document.body.appendChild(jsScript);
+
+      await Promise.all([cssLoaded, jsLoaded]);
+
+      // ✅ Now that assets are loaded, reveal main content
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("mainContent").style.display = "block";
+
+       initApp();
+
+    } catch (err) {
+      console.error("Asset loading failed:", err);
+      document.getElementById("loader").innerText = "❌ Failed to load assets.";
+    }
+  })();
+</script>
+
+
+</body>
+</html>
