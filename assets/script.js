@@ -1,83 +1,78 @@
 let fileInput, preview, previewContainer, result;
 
-    function toggleQA() {
-      const qaBox = document.getElementById("qaBox");
-      qaBox.style.display = qaBox.style.display === "block" ? "none" : "block";
-    }
-    function removeImage() {
-      fileInput.value = "";
-      preview.src = "";
-      preview.removeAttribute("src");
-      preview.style.display = "none";
-      previewContainer.style.display = "none";
-      if (result) result.textContent = "";
-    }
-    function initApp() {    
-        const dropZone = document.getElementById("dropZone");
-        fileInput = document.getElementById("imageInput");
-        preview = document.getElementById("preview");
-        previewContainer = document.getElementById("previewContainer");
-        result = document.getElementById("status");  
-
-        // Allowed image MIME types
-        const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-
-        // Drag & Drop
-        dropZone.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            dropZone.classList.add("dragover");
-        });
-
-        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-
-        dropZone.addEventListener("drop", (e) => {
-            e.preventDefault();
-            dropZone.classList.remove("dragover");
-            const file = e.dataTransfer.files[0];
-
-            if (!file) return;
-
-            if (!allowedTypes.includes(file.type)) {
-                alert("Please drop a valid image file (JPEG, PNG, GIF, WEBP).");
-                return;
-            }
-
-            if (file.size > maxSize) {
-                alert("File size must be less than 5MB.");
-                return;
-            }
-
-            fileInput.files = e.dataTransfer.files;
-            previewImage({ target: { files: [file] } });
-        });
-
-        // File input change
-        fileInput.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (!allowedTypes.includes(file.type)) {
-                alert("Please select a valid image file (JPEG, PNG, GIF, WEBP).");
-                fileInput.value = "";
-                return;
-            }
-
-            if (file.size > maxSize) {
-                alert("File size must be less than 5MB.");
-                fileInput.value = "";
-                return;
-            }
-
-            previewImage(e);
-        });
-
-    function previewImage(fileUri) {
-    const preview = document.getElementById('preview');
-    const container = document.getElementById('previewContainer');
-    preview.src = fileUri;
-    container.style.display = "block";
+function toggleQA() {
+  const qaBox = document.getElementById("qaBox");
+  qaBox.style.display = qaBox.style.display === "block" ? "none" : "block";
 }
+
+function removeImage() {
+  fileInput.value = "";
+  preview.src = "";
+  preview.removeAttribute("src");
+  preview.style.display = "none";
+  previewContainer.style.display = "none";
+  if (result) result.textContent = "";
+}
+
+function initApp() {
+  const dropZone = document.getElementById("dropZone");
+  fileInput = document.getElementById("imageInput");
+  preview = document.getElementById("preview");
+  previewContainer = document.getElementById("previewContainer");
+  result = document.getElementById("status");
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  const maxSize = 5 * 1024 * 1024;
+
+  // Drag and drop
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    if (!allowedTypes.includes(file.type)) return alert("Invalid image type.");
+    if (file.size > maxSize) return alert("Image too large.");
+    fileInput.files = e.dataTransfer.files;
+    previewImage({ target: { files: [file] } });
+  });
+
+  // Normal file input
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!allowedTypes.includes(file.type)) return alert("Invalid image type.");
+    if (file.size > maxSize) return alert("Image too large.");
+    const reader = new FileReader();
+    reader.onload = (event) => showPreview(event.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+// ✅ move showPreview outside initApp so Android can call it
+function showPreview(base64Data) {
+  console.log("Android preview called"); // ✅ debug line
+  const preview = document.getElementById("preview");
+  const container = document.getElementById("previewContainer");
+  const label = document.getElementById("dropZone");
+
+  if (preview && container) {
+    preview.src = base64Data;
+    preview.style.display = "block";
+    container.style.display = "block";
+    if (label) label.style.display = "none";
+  } else {
+    console.log("Preview elements not found!");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("DOM ready for Android");
+});
     let visitorLogId = null; // store the original logId globally
     // Generate session_hash for Gradio
     const sessionHash = Math.random().toString(36).substring(2);
@@ -224,7 +219,7 @@ rotateMessage();
 
 // Rotate every 5 seconds
 setInterval(rotateMessage, 5000);
-    }
+    
 
     //Background stars animation
 
