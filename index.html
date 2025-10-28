@@ -130,7 +130,45 @@
 
   <script>
   (async () => {
+    const hfInfoURL = "https://sangeeth47-age-gender-predictor.hf.space/gradio_api/info";
+
+    //Function: Check if Hugging Face backend is awake (after idle)
+    async function waitForHuggingFaceReady(statusEl, maxWaitMs = 45000) {
+      if (!statusEl) return;
+
+      let dotCount = 0;
+      let dotTimer = setInterval(() => {
+        dotCount = (dotCount + 1) % 4; // cycles 0–3
+        const dots = ".".repeat(dotCount);
+        statusEl.innerText = `🕐 Waking up model${dots}\n(⏳this may take up to 45s)`;
+      }, 500); // updates every 0.5s
+
+      const hfInfoURL = "https://sangeeth47-age-gender-predictor.hf.space/gradio_api/info";
+      const start = Date.now();
+      while (Date.now() - start < maxWaitMs) {
+        try {
+          const resp = await fetch(hfInfoURL, { method: "GET" });
+          if (resp.ok) {
+            clearInterval(dotTimer);
+            console.log("Hugging Face backend is ready!");
+            statusEl.innerText = "🟢 Model ready to shine.";
+            return true;
+          }
+        } catch {
+          // still waking up
+        }
+
+        await new Promise(r => setTimeout(r, 2000)); // retry every 2s
+      }
+
+      clearInterval(dotTimer);
+      statusEl.innerText = "⚠️ Model still waking up. Please refresh the page.";
+      console.warn("❌ Hugging Face backend not ready after 45 seconds");
+      return false;
+    }
+
     try {
+      // ✅ Step 1: Load assets
       const res = await fetch("https://sangeeth2314105883websitecounter.azurewebsites.net/api/getAssets");
       const { cssUrl, jsUrl } = await res.json();
 
@@ -142,7 +180,7 @@
         cssLink.onload = resolve;
         cssLink.onerror = () => {
           console.error("❌ Failed to load CSS");
-          resolve(); // Fallback to continue even if CSS fails
+          resolve();
         };
       });
 
@@ -155,7 +193,7 @@
         jsScript.onload = resolve;
         jsScript.onerror = () => {
           console.error("❌ Failed to load JS");
-          resolve(); // Continue even if JS fails
+          resolve();
         };
       });
 
@@ -163,11 +201,16 @@
 
       await Promise.all([cssLoaded, jsLoaded]);
 
-      // ✅ Now that assets are loaded, reveal main content
+      // ✅ Step 2: Reveal the page
       document.getElementById("loader").style.display = "none";
       document.getElementById("mainContent").style.display = "block";
 
-       initApp();
+      // ✅ Step 3: Initialize the app (your existing function)
+      if (typeof initApp === "function") initApp();
+
+      // ✅ Step 4: Run Hugging Face readiness check (non-blocking, shows only in #status)
+      const status = document.getElementById("status");
+      waitForHuggingFaceReady(status);
 
     } catch (err) {
       console.error("Asset loading failed:", err);
